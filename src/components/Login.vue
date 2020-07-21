@@ -1,0 +1,84 @@
+<template>
+  <Form :rules="rules" class="login-container" label-position="left"
+        :label-width="0" v-loading="loading">
+    <h3 class="login_title">系统登录</h3>
+    <FormItem prop="username">
+      <Input type="text" v-model="loginForm.username"
+             auto-complete="off" placeholder="账号"/>
+    </FormItem>
+    <FormItem prop="checkPass">
+      <Input type="password" v-model="loginForm.password"
+             auto-complete="off" placeholder="密码"/>
+    </FormItem>
+    <Checkbox class="login_remember" v-model="checked"
+              label-position="left">记住密码
+    </Checkbox>
+    <FormItem style="width: 100%">
+      <Button type="primary" style="width: 100%" @click="submitClick">登录</Button>
+    </FormItem>
+  </Form>
+</template>
+
+<script>
+export default {
+  data () {
+    return {
+      rules: {
+        username: [{required: true, message: '请输入用户名', trigger: 'blur'}],
+        checkPass: [{required: true, message: '请输入密码', trigger: 'blur'}]
+      },
+      checked: true,
+      loginForm: {
+        username: '',
+        password: ''
+      },
+      loading: false
+    }
+  },
+  methods: {
+    submitClick: function () {
+      let _this = this
+      this.loading = true
+      this.$store.dispatch('userLogin', {
+        'param': {
+          'username': this.loginForm.username,
+          'password': this.loginForm.password
+        }
+      }).then(resp => {
+        _this.loading = false
+        if (resp.code === '0') {
+          const data = resp.data
+          _this.$store.commit('login', data)
+          window.localStorage.setItem('user', JSON.stringify(data))
+          const path = _this.$route.query.redirect
+          _this.$router
+            .replace({path: path === '/' || path === undefined ? '/home' : path})
+        }
+      })
+    }
+  }
+}
+</script>
+<style>
+  .login-container {
+    border-radius: 15px;
+    background-clip: padding-box;
+    margin: 180px auto;
+    width: 350px;
+    padding: 35px 35px 15px 35px;
+    background: #fff;
+    border: 1px solid #eaeaea;
+    box-shadow: 0 0 25px #cac6c6;
+  }
+
+  .login_title {
+    margin: 0px auto 40px auto;
+    text-align: center;
+    color: #505458;
+  }
+
+  .login_remember {
+    margin: 0px 0px 35px 0px;
+    text-align: left;
+  }
+</style>

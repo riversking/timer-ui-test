@@ -1,7 +1,9 @@
 <template>
     <div>
       <Row>
-        <Button type="primary" @click="showModal" :style="{textAlign: 'left'}">新增</Button>
+        <Col :style="{textAlign: 'right'}">
+          <Button type="primary" @click="showModal">新增</Button>
+        </Col>
         <Modal v-model="addModal" footer-hide :closable="true">
           <p slot="header" style="color:#1e27ff">
             <span>新增用户</span>

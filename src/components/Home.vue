@@ -39,15 +39,15 @@
             </Menu>
           </div>
         </Sider>
-        <Layout >
-          <Breadcrumb :style="{margin: '24px 0'}">
+        <Layout :style="{padding: '0 18px 18px'}">
+          <Breadcrumb :style="{margin: '18px 0',textAlign: 'left'}">
             <BreadcrumbItem :to="{ path: '/home' }">首页</BreadcrumbItem>
             <BreadcrumbItem v-text="this.$router.currentRoute.name"></BreadcrumbItem>
           </Breadcrumb>
           <div class="homeWelcome" v-if="this.$router.currentRoute.path==='/home'">
             欢迎来到微人事！
           </div>
-          <Card :style="{padding: '0 24px 24px'}">
+          <Card>
             <keep-alive>
               <router-view/>
             </keep-alive>

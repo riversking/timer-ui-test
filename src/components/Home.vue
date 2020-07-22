@@ -7,16 +7,16 @@
           <Badge style="margin-right: 30px" :is-dot="this.$store.state.nfDot">
             <i class="fa fa-bell-o" @click="goChat" style="cursor: pointer"></i>
           </Badge>
-          <Dropdown @command="handleCommand">
-  <span class="el-dropdown-link home_userinfo" style="display: flex;align-items: center">
-    {{user.nickname}}
-    <i><img v-if="user.avatar!=''" :src="'api/v1/image/'+user.avatar"
-            style="width: 40px;height: 40px;margin-right: 5px;margin-left: 5px;border-radius: 40px"/></i>
-  </span>
-            <DropdownMenu slot="dropdown">
-              <DropdownItem>个人中心</DropdownItem>
-              <DropdownItem>设置</DropdownItem>
-              <DropdownItem command="logout" divided>注销</DropdownItem>
+          <Dropdown>
+            <span class="el-dropdown-link home_userinfo" style="display: flex;align-items: center">
+              {{user.nickname}}
+              <i><img v-if="user.avatar!=''" :src="'api/v1/image/'+user.avatar"
+                      style="width: 40px;height: 40px;margin-right: 5px;margin-left: 5px;margin-top: 25px;border-radius: 40px"/></i>
+            </span>
+            <DropdownMenu slot="list">
+              <DropdownItem >个人中心</DropdownItem>
+              <DropdownItem >设置</DropdownItem>
+              <DropdownItem divided>注销</DropdownItem>
             </DropdownMenu>
           </Dropdown>
         </div>
@@ -24,14 +24,14 @@
       <Layout>
         <Sider style="background: white">
           <div style="display: flex;justify-content: flex-start;text-align: left;">
-            <Menu :active-name="$route.name" theme="light" style="background: white;">
+            <Menu :active-name="$route.name" :open-names="openKeys" ref="side_menu">
               <Submenu :index="index+''" v-for="(item,index) in routes" v-if="!item.hidden" :key="index"
                        :name="item.name">
                 <template slot="title">
                   <Icon :type="item.icon"/>
                   {{item.name}}
                 </template>
-                <menu-item :index="index+''" v-for="(child,index) in item.children" :name="child.name" :key="index" :to="child.path">
+                <menu-item :index="index+''" v-for="(child,index) in item.children" :name="child.name" :key="index" :to="child.path" >
                   <i style="color: #409eff;margin-right: 5px" :class="child.icon"></i>
                   <span>{{child.name}}</span>
                 </menu-item>
@@ -47,11 +47,9 @@
           <div class="homeWelcome" v-if="this.$router.currentRoute.path==='/home'">
             欢迎来到微人事！
           </div>
-          <Card>
             <keep-alive>
               <router-view/>
             </keep-alive>
-          </Card>
         </Layout>
       </Layout>
     </Layout>
@@ -122,11 +120,22 @@ export default {
       })
     }
   },
+  watch: {
+    openKeys () {
+      this.$refs.side_menu.$children.forEach(item => {
+        item.opened = false
+      })
+      this.$nextTick(() => {
+        this.$refs.side_menu.updateOpened()
+      })
+    }
+  },
   data () {
     return {
       isDot: false,
       isRouterAlive: true,
-      activerouter: ''
+      activerouter: '',
+      openKeys: []
     }
   },
   computed: {

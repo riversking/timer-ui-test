@@ -1,67 +1,16 @@
 <template>
     <div>
-      <Row>
-        <Col :style="{textAlign: 'right'}">
-          <Button type="primary" @click="showModal">新增</Button>
-        </Col>
-        <Modal v-model="addModal" footer-hide :closable="true">
-          <p slot="header" style="color:#1e27ff">
-            <span>新增用户</span>
-          </p>
-          <Form :model="formItem" :label-width="80">
-            <FormItem label="用户名：">
-              <Input v-model="formItem.username" placeholder="请输入用户名"></Input>
-            </FormItem>
-            <FormItem label="密码：">
-              <Input v-model="formItem.password" placeholder="请输入密码" type="password"></Input>
-            </FormItem>
-            <FormItem label="手机号：">
-              <Input v-model="formItem.phone" placeholder="请输入手机号"></Input>
-            </FormItem>
-            <FormItem label="角色：">
-              <Select v-model="formItem.roleIds" multiple>
-                <Option v-for="item in roleList" :value="item.id" :key="item.id">{{item.roleName}}</Option>
-              </Select>
-            </FormItem>
-            <FormItem label="头像：">
-              <div>
-                <Upload
-                  ref="upload"
-                  :show-upload-list="false"
-                  :default-file-list="defaultList"
-                  :on-success="handleSuccess"
-                  :format="['jpg','jpeg','png']"
-                  :max-size="2048"
-                  :on-format-error="handleFormatError"
-                  :on-exceeded-size="handleMaxSize"
-                  :before-upload="handleBeforeUpload"
-                  type="drag"
-                  :multiple=false
-                  action="/file/upload"
-                  style="display: inline-block;width:58px;">
-                  <div style="width: 58px;height:58px;line-height: 58px;">
-                    <Icon type="ios-camera" size="20"></Icon>
-                  </div>
-                </Upload>
-                <Modal title="View Image" v-model="visible">
-                  <img :src="'http://localhost:10500/api/v1/image/'+this.formItem.avatar" v-if="visible"
-                       style="width: 100%">
-                </Modal>
-              </div>
-            </FormItem>
-            <FormItem>
-              <Button type="primary" @click="addUser()">确认</Button>
-              <Button style="margin-left: 8px">取消</Button>
-            </FormItem>
-          </Form>
-        </Modal>
-      </Row>
-      <br>
-      <Row :gutter="12">
-        <Col span="24">
-          <Table border :columns="userColumns" :data="listData"></Table>
-        </Col>
-      </Row>
+      <Card>
+        <Row :gutter="12">
+          <Col :span="24" :style="{textAlign: 'right'}">
+            <Button type="primary" @click="showModal">新增</Button>
+          </Col>
+          <Col :span="24" :style="{marginTop: '10px'}">
+            <Table border :columns="userColumns" :data="userList"></Table>
+            <Page :total="total" show-sizer show-total :style="{marginTop: '10px',textAlign: 'right'}" @on-change="changePage" @on-page-size-change="sizeChange"/>
+          </Col>
+        </Row>
+      </Card>
     </div>
 </template>
 <script>
@@ -72,7 +21,11 @@ export default {
   data () {
     return {
       namespace: 'user',
+      userList: [],
       addModal: false,
+      total: 0,
+      page: 1,
+      size: 10,
       formItem: {
         username: '',
         password: '',
@@ -86,7 +39,7 @@ export default {
       uploadList: [],
       userColumns: [
         {
-          title: '序号',
+          title: '#',
           key: 'id',
           align: 'center'
         },
@@ -101,52 +54,35 @@ export default {
           align: 'center'
         },
         {
-          title: '头像',
-          key: 'avatar',
-          align: 'center',
-          render: (h, params) => {
-            return h('div', [
-              h('img', {
-                attrs: {
-                  src: 'http://localhost:10500/api/v1/image/' + params.row.avatar
-                },
-                style: {
-                  widget: '40px',
-                  height: '40px'
-                },
-                on: {
-                  click: () => {
-                    // this.visible = true
-                  }
-                }
-              })
-            ])
-          }
+          title: '姓名',
+          key: 'nickname',
+          align: 'center'
         },
         {
           title: '角色',
           key: 'roleName',
           align: 'center',
           render: (h, params) => {
-            return h('div',
-              params.row.sysRoleModels.map(i => {
-                return h('Tag', {
-                  style: {
-                    marginRight: '5px'
-                  }
-                }, i.roleName)
-              })
-            )
+            if (params.row.sysRoleModels != null) {
+              return h('div',
+                params.row.sysRoleModels.map(i => {
+                  return h('Tag', {
+                    props: {
+                      type: 'border',
+                      color: 'primary'
+                    },
+                    style: {
+                      marginRight: '5px'
+                    }
+                  }, i.roleName)
+                })
+              )
+            }
           }
         },
         {
           title: '创建时间',
           key: 'createTime',
-          align: 'center'
-        },
-        {
-          title: '更新时间',
-          key: 'updateTime',
           align: 'center'
         },
         {
@@ -168,7 +104,7 @@ export default {
                     this.getUserDetail(params.row.id)
                   }
                 }
-              }, '查看'),
+              }, '编辑'),
               h('Button', {
                 props: {
                   type: 'error',
@@ -226,8 +162,6 @@ export default {
       this.addModal = true
     },
     addUser () {
-      this.formItem.createUser = 'admin'
-      this.formItem.updateUser = 'admin'
       this.$store.dispatch('add', {'param': this.formItem})
         .then(data => {
           switch (data.code) {
@@ -244,17 +178,21 @@ export default {
     getRoleList () {
       this.$store.dispatch(`roleList`, {'param': this.formItem})
         .then(data => {
-          console.log('datadatadatadata', data)
+
         })
     },
     getList () {
       let query = {
-        page: 1,
-        pageSize: 20
+        page: this.page,
+        pageSize: this.size
       }
       this.$store.dispatch(`userPage`, {'param': query})
-        .then(data => {
-          console.log('datadatadatadata', data)
+        .then(resp => {
+          if (resp.code === '0') {
+            this.userList = resp.data.records
+            this.total = resp.data.total
+            this.loading = false
+          }
         })
     },
     getUserDetail (id) {
@@ -270,6 +208,14 @@ export default {
               break
           }
         })
+    },
+    changePage (page) {
+      this.page = page
+      this.getList()
+    },
+    sizeChange (size) {
+      this.size = size
+      this.getList()
     }
   },
   computed: {
@@ -279,7 +225,6 @@ export default {
     })
   },
   mounted () {
-    this.uploadList = this.$refs.upload.fileList
     this.getRoleList()
   },
   created () {

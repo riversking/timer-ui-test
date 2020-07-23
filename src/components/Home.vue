@@ -24,7 +24,7 @@
       <Layout>
         <Sider style="background: white">
           <div style="display: flex;justify-content: flex-start;text-align: left;">
-            <Menu :active-name="$route.name" :open-names="openKeys" ref="side_menu">
+            <Menu :active-name="$route.name" :open-names="[$route.matched[0].name]" ref="side_menu">
               <Submenu :index="index+''" v-for="(item,index) in routes" v-if="!item.hidden" :key="index"
                        :name="item.name">
                 <template slot="title">
